@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Multilingual Speech Recognition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #fff;
+      padding: 2rem 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      text-align: center;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+
+    select,
+    button {
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      margin-bottom: 1.2rem;
+      width: 100%;
+      outline: none;
+    }
+
+    button {
+      background-color: #007bff;
+      color: #fff;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      font-size: 1rem;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      resize: vertical;
+      background-color: #fafafa;
+    }
+
+    .footer {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #888;
+    }
+
+    /* Listening animation */
+    .listening {
+      animation: pulse 1s infinite;
+      background-color: #dc3545 !important;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+    }
+
+    select:focus,
+    textarea:focus,
+    button:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌍 Multilingual Speech Recognition</h1>
+
+    <label for="language">Choose Language</label>
+    <select id="language">
+      <option value="en-US">English (US)</option>
+      <option value="es-ES">Spanish (Spain)</option>
+      <option value="fr-FR">French (France)</option>
+      <option value="de-DE">German</option>
+      <option value="hi-IN">Hindi</option>
+      <option value="zh-CN">Chinese (Mandarin)</option>
+      <option value="ja-JP">Japanese</option>
+      <option value="ru-RU">Russian</option>
+    </select>
+
+    <button id="toggleBtn">🎤 Start Listening</button>
+
+    <textarea id="output" placeholder="Your speech will appear here..." readonly></textarea>
+
+    <div class="footer">
+      Powered By Passion
+    </div>
+  </div>
+
+  <script>
+    const toggleBtn = document.getElementById('toggleBtn');
+    const output = document.getElementById('output');
+    const languageSelector = document.getElementById('language');
+
+    let isListening = false;
+    let recognition;
+
+    const createRecognizer = (lang) => {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert('Your browser does not support Speech Recognition. Please use Google Chrome.');
+        return null;
+      }
+      const recognizer = new SpeechRecognition();
+      recognizer.lang = lang;
+      recognizer.continuous = true;
+      recognizer.interimResults = true;
+      return recognizer;
+    };
+
+    toggleBtn.onclick = () => {
+      if (!isListening) {
+        const lang = languageSelector.value;
+        recognition = createRecognizer(lang);
+        if (!recognition) return;
+
+        recognition.onresult = (event) => {
+          let finalTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript + '\n';
+            }
+          }
+          output.value += finalTranscript;
+        };
+
+        recognition.onerror = (event) => {
+          alert('Error occurred in recognition: ' + event.error);
+        };
+
+        recognition.onend = () => {
+          if (isListening) recognition.start(); // Auto-restart if still listening
+        };
+
+        recognition.start();
+        toggleBtn.textContent = '🛑 Stop Listening';
+        toggleBtn.classList.add('listening');
+        languageSelector.disabled = true;
+      } else {
+        recognition.stop();
+        toggleBtn.textContent = '🎤 Start Listening';
+        toggleBtn.classList.remove('listening');
+        languageSelector.disabled = false;
+      }
+      isListening = !isListening;
+    };
+  </script>
+</body>
+</html>
